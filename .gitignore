@@ -1,0 +1,23 @@
+# Secrets
+.env
+.env.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# PyCharm
+.idea/
+
+# Frontend dependencies
+node_modules/
+
+# Temporary files
+.pytest_cache/
