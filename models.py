@@ -60,6 +60,16 @@ class Feedback(Base):
         server_default=func.now(),
     )
 
+class UserPreferences(Base):
+    __tablename__ = "user_preferences"
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    genre_scores = Column(JSON, nullable=False, default=dict)
+    top_ratings = Column(JSON, nullable=False, default=list)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
 class ConversationState(Base):
     __tablename__ = "conversation_states"
 

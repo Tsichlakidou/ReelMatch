@@ -78,7 +78,41 @@ def get_show_details(tmdb_id: int, media_type: str):
 
     return data
 
+
+def discover_movies(genre_id: int):
+    discover_url = "https://api.themoviedb.org/3/discover/movie"
+    params = {
+        "with_genres": genre_id,
+        "sort_by": "popularity.desc",
+        "vote_count.gte": 100
+    }
+
+    response = requests.get(
+        discover_url,
+        headers=headers,
+        params=params,
+        timeout=10
+    )
+    response.raise_for_status()
+    data = response.json()
+    movies = data.get("results", [])
+    results = []
+    for movie in movies[:10]:
+        show = {
+            "tmdb_id": movie["id"],
+            "title": movie["title"],
+            "overview": movie.get("overview"),
+            "genre_ids": movie.get("genre_ids", []),
+            "release_date": movie.get("release_date"),
+            "vote_average": movie.get("vote_average")
+        }
+        results.append(show)
+
+    return results
+
+
 if __name__ == "__main__":
-    details = get_show_details(27205, "movie")
-    print(details["title"])
-    print(details["runtime"])
+    movies = discover_movies(878)
+
+    for movie in movies[:5]:
+        print(movie["title"], movie["vote_average"])
