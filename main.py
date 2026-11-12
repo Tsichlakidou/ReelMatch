@@ -7,22 +7,16 @@ from database import Base, engine, get_db
 from models import User, Shows, UserShow
 
 from schemas import (
-    UserCreate,
-    UserResponse,
-    UserUpdate,
-    WatchlistAdd,
-    WatchlistUpdate,
-    WatchlistResponse,
-    UserShowResponse,
-    WatchlistAddResponse,
-    AssistantRequest,
-    AssistantResponse,
+    UserCreate, UserResponse, UserUpdate,
+    WatchlistAdd, WatchlistUpdate, WatchlistResponse,
+    UserShowResponse, WatchlistAddResponse, AssistantRequest,
+    AssistantResponse, AgentChatRequest, AgentChatResponse
 )
 
 from ai_assistant import process_message
 from tmdb import search_shows
 from watchlist_service import add_show_to_watchlist
-
+from sql_agent import agent
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(
@@ -189,3 +183,29 @@ def assistant_chat(
     db: Session = Depends(get_db)
 ):
     return process_message(request.message, user_id, db)
+
+
+@app.post("/agent/chat", response_model=AgentChatResponse)
+def agent_chat(request: AgentChatRequest):
+    config = {
+        "configurable": {
+            "thread_id": f"user_{request.user_id}"
+        }
+    }
+    result = agent.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        f"Current user_id: {request.user_id}\n"
+                        f"User request: {request.message}"
+                    )
+                }
+            ]
+        },
+        config=config
+    )
+    return AgentChatResponse(
+        reply=result["messages"][-1].content
+    )

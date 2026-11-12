@@ -7,8 +7,7 @@ from models import Shows, UserShow, UserPreferences
 import json
 from tmdb import discover_movies
 
-load_dotenv()
-
+load_dotenv(override=True)
 
 @tool
 def get_user_preferences(user_id: int) -> str:
@@ -84,18 +83,38 @@ agent = create_agent(
     Respond in the same language as the user.
     """
 )
-
-result = agent.invoke({
-    "messages": [
-        {
-            "role": "user",
-            "content": "Recommend a movie for user 2 based on their preferences."
-        }
-    ]
-})
-
-for message in result["messages"]:
-    print("TYPE:", type(message).__name__)
-    print("CONTENT:", message.content)
-    print("TOOL CALLS:", getattr(message, "tool_calls", None))
-    print("----------------------")
+#
+# result = agent.invoke({
+#     "messages": [
+#         {
+#             "role": "user",
+#             "content": "Recommend a movie for user 2 based on their preferences."
+#         }
+#     ]
+# })
+# total_input = 0
+# total_output = 0
+# for message in result["messages"]:
+#     print("TYPE:", type(message).__name__)
+#     print("CONTENT:", message.content)
+#     print("TOOL CALLS:", getattr(message, "tool_calls", None))
+#     print("----------------------")
+#
+#     usage = getattr(message, "usage_metadata", None)
+#
+#     if usage:
+#         input_tokens = usage.get("input_tokens", 0)
+#         output_tokens = usage.get("output_tokens", 0)
+#
+#         total_input += input_tokens
+#         total_output += output_tokens
+#
+#         print("INPUT TOKENS:", input_tokens)
+#         print("OUTPUT TOKENS:", output_tokens)
+#
+#     print("----------------------")
+#
+# print("\n--- TOKEN USAGE ---")
+# print("Total input tokens:", total_input)
+# print("Total output tokens:", total_output)
+# print("Total tokens:", total_input + total_output)

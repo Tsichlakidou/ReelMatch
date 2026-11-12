@@ -4,6 +4,7 @@ from schemas import WatchlistAdd
 from tmdb import get_show_details
 from fastapi import HTTPException
 import json
+from preference_service import update_user_preferences
 
 def add_show_to_watchlist(
     user_id: int,
@@ -65,4 +66,46 @@ def add_show_to_watchlist(
     return {
         "message": "Show added to watchlist",
         "user_show_id": new_user_show.id,
+    }
+
+
+def update_user_show(
+    user_id: int,
+    user_show_id: int,
+    rating: int,
+    db: Session
+):
+    show = db.query(UserShow).filter(
+        UserShow.id == user_show_id,
+        UserShow.user_id == user_id
+    ).first()
+
+    if not show:
+        raise HTTPException(
+            status_code=404,
+            detail="User show not found"
+        )
+
+    if rating<1 or rating>10:
+        raise HTTPException(
+            status_code=400,
+            detail="Rating must be between 1 and 10"
+        )
+
+    try:
+        show.status="watched"
+        show.rating=rating
+        db.flush()
+        update_user_preferences(user_id, db)
+
+        db.commit()
+        db.refresh(show)
+    except Exception:
+        db.rollback()
+        raise
+    return {
+        "message": "Movie updated successfully",
+        "user_show_id": show.id,
+        "status": show.status,
+        "rating": show.rating
     }

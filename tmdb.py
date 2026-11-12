@@ -79,13 +79,32 @@ def get_show_details(tmdb_id: int, media_type: str):
     return data
 
 
-def discover_movies(genre_id: int):
+def discover_movies(
+    genre_id: int | None = None,
+    year: int | None = None,
+    release_date_gte: str | None = None,
+    release_date_lte: str | None = None,
+    vote_average_gte: float | None = None,
+    vote_count_gte: int = 100,
+    sort_by: str = "vote_average.desc",
+    original_language: str | None = None
+):
     discover_url = "https://api.themoviedb.org/3/discover/movie"
     params = {
-        "with_genres": genre_id,
-        "sort_by": "popularity.desc",
-        "vote_count.gte": 100
+        "sort_by": sort_by,
+        "vote_count.gte": vote_count_gte
     }
+    if genre_id is not None:
+        params["with_genres"] = genre_id
+    if year is not None:
+        params["primary_release_year"] = year
+    if release_date_gte is not None:
+        params["release_date.gte"] = release_date_gte
+    if vote_average_gte is not None:
+        params["vote_average.gte"] = vote_average_gte
+    if original_language is not None:
+        params["with_original_language"] = original_language
+
 
     response = requests.get(
         discover_url,

@@ -82,3 +82,4 @@ class ConversationState(Base):
     )
     pending_action = Column(String(50), nullable=True)
     pending_matches = Column(JSON, nullable=True)
+

@@ -106,21 +106,65 @@ def update_user_preferences(user_id: int, db: Session):
         )
         db.add(preference)
     # 5. Save changes
-    db.commit()
-    db.refresh(preference)
+    db.flush()
 
     return preference
+
+
+def get_user_preferences(user_id: int, db: Session):
+    users_profile = (
+        db.query(UserPreferences).filter(UserPreferences.user_id == user_id).first()
+    )
+
+    recent_movies = (
+        db.query(Shows, UserShow)
+        .join(UserShow, UserShow.show_id == Shows.id)
+        .filter(
+            UserShow.status == "watched",
+            UserShow.user_id == user_id,
+            UserShow.rating >=7,
+            Shows.media_type == "movie"
+        ).order_by(UserShow.added_at.desc()).limit(3).all()
+    )
+    recent_favorites = []
+
+    for movie, user_show in recent_movies:
+        recent_favorites.append({
+            "tmdb_id": movie.tmdb_id,
+            "title": movie.title,
+            "rating": user_show.rating,
+            "added_at": user_show.added_at.isoformat()
+        })
+
+    excluded_movies = (
+        db.query(Shows.tmdb_id)
+        .join(UserShow, UserShow.show_id == Shows.id)
+        .filter(
+            UserShow.user_id == user_id,
+            Shows.media_type == "movie",
+            UserShow.status.in_(["watched", "watchlist"])
+        ).all()
+    )
+    excluded_tmdb_ids = [
+        tmdb_id for (tmdb_id,) in excluded_movies
+    ]
+    return {
+        "genre_scores": users_profile.genre_scores if users_profile else {},
+        "top_ratings": users_profile.top_ratings if users_profile else [],
+        "recent_favorites": recent_favorites,
+        "excluded_tmdb_ids": excluded_tmdb_ids
+    }
 
 if __name__ == "__main__":
     db = SessionLocal()
 
     try:
-        preference = update_user_preferences(2, db)
+        profile = get_user_preferences(2, db)
 
-        print("User ID:", preference.user_id)
-        print("Genres:", preference.genre_scores)
-        print("Top movies:", preference.top_ratings)
-        print("Updated at:", preference.updated_at)
+        print("Genre scores:", profile["genre_scores"])
+        print("Top ratings:", profile["top_ratings"])
+        print("Recent favorites:", profile["recent_favorites"])
+        print("Excluded TMDB IDs:", profile["excluded_tmdb_ids"])
 
     finally:
         db.close()
